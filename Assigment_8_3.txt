@@ -1,0 +1,101 @@
+1)Find out the top 5 most visited destinations.
+
+1   Delayed_Flights = LOAD '/home/acadgild/anil/Pig_Assignments/DelayedFlights.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',','NO_MULTILINE','UNIX','SKIP_INPUT_HEADER');
+2   req_Delayed_Flights =  foreach Delayed_Flights  generate (int)$1 as year, (int)$10 as flight_num, (chararray)$17 as origin,(chararray) $18 as dest;
+3   group_by_dest = Group req_Delayed_Flights by dest;
+4   count_by_dest = foreach group_by_dest generate group as dest ,COUNT($1);
+5   order_by_count = order count_by_dest by $1 DESC;
+6   limit_count_5 = limit order_by_count 5;
+
+
+
+2)Which month has seen the most number of cancellations due to bad weather?
+
+Delayed_Flights  = load '/home/acadgild/airline_usecase/DelayedFlights.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',','NO_MULTILINE','UNIX','SKIP_INPUT_HEADER');
+ 
+req_Delayed_Flights  = foreach Delayed_Flights  generate (int)$2 as month,(int)$10 as flight_num,(int)$22 as cancelled,(chararray)$23 as cancel_code;
+ 
+Filter_data = filter req_Delayed_Flights  by cancelled == 1 AND cancel_code =='B';
+ 
+group_month = group Filter_data by month;
+ 
+count_month = foreach D generate group, COUNT(C.cancelled);
+ 
+desc_ord= order count_month   by $1 DESC;
+ 
+Result = limit desc_ord 1;
+ 
+dump Result;
+
+3)Top ten origins with the highest AVG departure delay
+
+
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+REGISTER '/home/acadgild/airline_usecase/piggybank.jar';
+ 
+A = load '/home/acadgild/airline_usecase/DelayedFlights.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',','NO_MULTILINE','UNIX','SKIP_INPUT_HEADER');
+ 
+B1 = foreach A generate (int)$16 as dep_delay, (chararray)$17 as origin;
+ 
+C1 = filter B1 by (dep_delay is not null) AND (origin is not null);
+ 
+D1 = group C1 by origin;
+ 
+E1 = foreach D1 generate group, AVG(C1.dep_delay);
+ 
+Result = order E1 by $1 DESC;
+ 
+Top_ten = limit Result 10;
+ 
+Lookup = load '/home/acadgild/airline_usecase/airports.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',','NO_MULTILINE','UNIX','SKIP_INPUT_HEADER');
+ 
+Lookup1 = foreach Lookup generate (chararray)$0 as origin, (chararray)$2 as city, (chararray)$4 as country;
+ 
+Joined = join Lookup1 by origin, Top_ten by $0;
+ 
+Final = foreach Joined generate $0,$1,$2,$4;
+ 
+Final_Result = ORDER Final by $3 DESC;
+ 
+dump Final_Result;
+
+4)Which route (origin & destination) has seen the maximum diversion?
+
+Delayed_Flights   = load '/home/acadgild/airline_usecase/DelayedFlights.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',','NO_MULTILINE','UNIX','SKIP_INPUT_HEADER');
+ 
+req_Delayed_Flights   = FOREACH Delayed_Flights  GENERATE (chararray)$17 as origin, (chararray)$18 as dest, (int)$24 as diversion;
+ 
+Filter_req_Delayed_Flights   = FILTER req_Delayed_Flights    BY (origin is not null) AND (dest is not null) AND (diversion == 1);
+ 
+Filter_org_dest = GROUP Filter_req_Delayed_Flights   by (origin,dest);
+ 
+count_org_dest = FOREACH Filter_org_dest  generate group, COUNT(C.diversion);
+ 
+ord_count_org_dest  = ORDER count_org_dest BY $1 DESC;
+ 
+Result = limit ord_count_org_dest   10;
+ 
+dump Result;
